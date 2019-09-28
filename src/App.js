@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  Button,
-  DatePicker,
-  Spinner,
-  Notification
-} from "react-rainbow-components";
+import { Button, DatePicker } from "react-rainbow-components";
+import Notification from "./components/Notification/Notification";
+import Spinner from "./components/Spinner/Spinner";
 import { getJournalData, saveJournalData } from "./firebase/firebase";
+import _dNdHandler from "./utils/dNdHandler";
+import previewFileImg from "./utils/previewFileImg";
 
 const moods = ["happy", "neutral", "sad", "angry", "scared"];
 
@@ -28,21 +27,26 @@ function App() {
 
   useEffect(() => {
     setLoading(true);
-    getJournalData(date).then(data => {
-      if (data) {
+    getJournalData(date)
+      .then(data => {
+        data = data ? data : {};
         setSelectedMood(data.mood);
-        setTitle(data.title);
-        setJournal(data.entry);
-        setFood(data.food);
-        setExpenses(data.expenses);
-        setVocabulary(data.vocabulary);
-        setFriend(data.friend);
-        setDaySRC(data.dayPhotoUrl);
-        setNightSRC(data.nightPhotoUrl);
-        setPlaceSRC(data.placePhotoUrl);
-      }
-      setLoading(false);
-    });
+        setTitle(data.title || "");
+        setJournal(data.entry || "");
+        setFood(data.food || "");
+        setExpenses(data.expenses || "");
+        setVocabulary(data.vocabulary || "");
+        setFriend(data.friend || "");
+        setDaySRC(data.dayPhotoUrl || "");
+        setNightSRC(data.nightPhotoUrl || "");
+        setPlaceSRC(data.placePhotoUrl || "");
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error(error);
+        showNotification("load_error");
+        setLoading(false);
+      });
   }, [date]);
 
   const save = () => {
@@ -59,105 +63,63 @@ function App() {
       dayPhotoUrl: daySRC,
       nightPhotoUrl: nightSRC,
       placePhotoUrl: placeSRC
-    }).then(
-      () => {
+    })
+      .then(() => {
         setLoading(false);
         showNotification("success");
-      },
-      () => {
+      })
+      .catch(error => {
         setLoading(false);
-        showNotification("error");
-      }
-    );
+        console.error(error);
+        showNotification("save_error");
+      });
   };
 
   const dNdHandler = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    switch (e.type) {
-      case "dragenter":
-      case "dragover":
-        e.currentTarget.classList.add("highlight");
-        break;
-      case "dragleave":
-        e.currentTarget.classList.remove("highlight");
-        break;
-      case "drop":
-        e.currentTarget.classList.remove("highlight");
-        let files = e.dataTransfer.files;
-        switch (e.currentTarget.id) {
-          case "dayPhoto":
-            previewFile(files[0], setDaySRC);
-            break;
-          case "nightPhoto":
-            previewFile(files[0], setNightSRC);
-            break;
-          case "placePhoto":
-            previewFile(files[0], setPlaceSRC);
-            break;
-          default:
-            break;
-        }
-        break;
-      default:
-        console.log("this should not have happened!");
-    }
+    const onDrop = _event => {
+      const setStateMapper = {
+        dayPhoto: setDaySRC,
+        nightPhoto: setNightSRC,
+        placePhoto: setPlaceSRC
+      };
+      const file = _event.dataTransfer.files[0];
+      previewFileImg(file, setStateMapper(_event.currentTarget.id));
+    };
+    _dNdHandler({
+      highlightClass: "highlight",
+      onDrop
+    })(e);
   };
 
-  const previewFile = (file, setSRC) => {
-    let reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = function() {
-      setSRC(reader.result);
-    };
+  const closeNotification = () => {
+    showNotification(false);
   };
 
   return (
-    <div>
-      {loading && (
-        <div className="overlay">
-          <Spinner size="large" />
-        </div>
-      )}
-      {notification === "success" && (
-        <Notification
-          style={{
-            position: "absolute",
-            right: "20px",
-            top: "10px",
-            zIndex: "100"
-          }}
-          onRequestClose={() => {
-            showNotification(false);
-          }}
-          title="Save successful"
-          description="Journal saved successfully"
-          icon="success"
-        />
-      )}
-      {notification === "error" && (
-        <Notification
-          style={{
-            position: "absolute",
-            right: "20px",
-            top: "10px",
-            zIndex: "100"
-          }}
-          onRequestClose={() => {
-            showNotification(false);
-          }}
-          title="Save failed"
-          description="Unknown error occured"
-          icon="error"
-        />
-      )}
+    <>
+      <Spinner show={loading} />
+      <Notification status={notification} onClose={closeNotification} />
       <div className="flex-box">
         <div className="date-container">
+          <Button
+            variant="base"
+            label="<"
+            onClick={() =>
+              setDate(new Date(date.getTime() - 24 * 60 * 60 * 1000))
+            }
+          />
           <DatePicker
             formatStyle="large"
             value={date}
             label=""
             onChange={value => setDate(value)}
+          />
+          <Button
+            variant="base"
+            label=">"
+            onClick={() =>
+              setDate(new Date(date.getTime() + 24 * 60 * 60 * 1000))
+            }
           />
         </div>
         <div className="mood-container">
@@ -171,18 +133,13 @@ function App() {
               src={`/assets/moods/${mood}.png`}
             />
           ))}
-          <Button
-            variant="base"
-            label="Save"
-            onClick={save}
-            className="rainbow-m-around_medium"
-          />
+          <Button variant="base" label="Save" onClick={save} />
         </div>
       </div>
       <div className="flex-box">
         <div className="boxes-container">
           <div className="box-container">
-            <div className="title">Food</div>
+            <div className="title red-pill">Food</div>
             <textarea
               value={food}
               onChange={({ target: { value } }) => setFood(value)}
@@ -190,7 +147,7 @@ function App() {
             ></textarea>
           </div>
           <div className="box-container">
-            <div className="title">Expenses</div>
+            <div className="title blue-pill">Expenses</div>
             <textarea
               value={expenses}
               onChange={({ target: { value } }) => setExpenses(value)}
@@ -198,7 +155,7 @@ function App() {
             ></textarea>
           </div>
           <div className="box-container">
-            <div className="title">Vocabulary</div>
+            <div className="title green-pill">Vocabulary</div>
             <textarea
               value={vocabulary}
               onChange={({ target: { value } }) => setVocabulary(value)}
@@ -206,7 +163,7 @@ function App() {
             ></textarea>
           </div>
           <div className="box-container">
-            <div className="title">Friend of the day</div>
+            <div className="title yellow-pill">Friend of the day</div>
             <textarea
               value={friend}
               onChange={({ target: { value } }) => setFriend(value)}
@@ -267,7 +224,7 @@ function App() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

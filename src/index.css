@@ -1,4 +1,5 @@
-body {
+body,
+html {
   margin: 0;
   font-family: Lato, Helvetica;
   -webkit-font-smoothing: antialiased;
@@ -24,15 +25,18 @@ body {
   padding: 15px 0px;
 }
 
-.date-container .rainbow-date-picker_input-container {
-  flex-direction: row;
+.date-container {
+  display: flex;
 }
 
 .date-container
   .rainbow-date-picker_input-container
-  .rainbow-date-picker_input-label,
+  .rainbow-date-picker_input-label {
+  padding: 0;
+}
 .title {
-  padding-right: 8px;
+  padding: 0px 8px;
+  padding-left: 10px;
   font-size: 1.25rem;
   line-height: 2rem;
   color: #333;
@@ -144,10 +148,39 @@ body {
   padding: 5px;
 }
 
+.my-photo img {
+  border-radius: 50%;
+}
+
 .default img {
   opacity: 0.3;
 }
 
 .highlight {
   background: #4e4e4e;
+}
+
+.date-container .rainbow-button:focus {
+  outline: 0;
+  box-shadow: none;
+}
+
+.blue-pill,
+.green-pill,
+.yellow-pill,
+.red-pill {
+  position: relative;
+  background: #e74c3c;
+  color: #fff;
+  border-radius: 0px 50px 50px 0px;
+}
+
+.blue-pill {
+  background: #3498db;
+}
+.green-pill {
+  background: #1abc9c;
+}
+.yellow-pill {
+  background: #f1c40f;
 }
