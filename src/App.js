@@ -2,9 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Button, DatePicker } from "react-rainbow-components";
 import Notification from "./components/Notification/Notification";
 import Spinner from "./components/Spinner/Spinner";
-import { getJournalData, saveJournalData } from "./firebase/firebase";
+import {
+  authenticate,
+  getJournalData,
+  saveJournalData
+} from "./firebase/firebase";
 import _dNdHandler from "./utils/dNdHandler";
 import previewFileImg from "./utils/previewFileImg";
+import { Modal, Input } from "react-rainbow-components";
 
 const moods = ["happy", "neutral", "sad", "angry", "scared"];
 
@@ -24,30 +29,41 @@ function App() {
   const [placeSRC, setPlaceSRC] = useState("");
   const [loading, setLoading] = useState(false);
   const [notification, showNotification] = useState(false);
+  const [modal, showModal] = useState(false);
+  const [username, setUsername] = useState();
+  const [password, setPassword] = useState();
+  const [auth, doAuth] = useState();
 
   useEffect(() => {
-    setLoading(true);
-    getJournalData(date)
-      .then(data => {
-        data = data ? data : {};
-        setSelectedMood(data.mood);
-        setTitle(data.title || "");
-        setJournal(data.entry || "");
-        setFood(data.food || "");
-        setExpenses(data.expenses || "");
-        setVocabulary(data.vocabulary || "");
-        setFriend(data.friend || "");
-        setDaySRC(data.dayPhotoUrl || "");
-        setNightSRC(data.nightPhotoUrl || "");
-        setPlaceSRC(data.placePhotoUrl || "");
+    if (auth) {
+      (async () => {
+        showModal(false);
+        setLoading(true);
+        try {
+          await authenticate(username, password);
+          let data = await getJournalData(date);
+          data = data ? data : {};
+          setSelectedMood(data.mood);
+          setTitle(data.title || "");
+          setJournal(data.entry || "");
+          setFood(data.food || "");
+          setExpenses(data.expenses || "");
+          setVocabulary(data.vocabulary || "");
+          setFriend(data.friend || "");
+          setDaySRC(data.dayPhotoUrl || "");
+          setNightSRC(data.nightPhotoUrl || "");
+          setPlaceSRC(data.placePhotoUrl || "");
+        } catch (error) {
+          console.error(error);
+          showNotification("load_error");
+          setLoading(false);
+        }
         setLoading(false);
-      })
-      .catch(error => {
-        console.error(error);
-        showNotification("load_error");
-        setLoading(false);
-      });
-  }, [date]);
+      })();
+    } else {
+      showModal(true);
+    }
+  }, [date, auth, username, password]);
 
   const save = () => {
     setLoading(true);
@@ -94,9 +110,51 @@ function App() {
   const closeNotification = () => {
     showNotification(false);
   };
-
+  const closeModal = () => {
+    showModal(false);
+  };
+  const handleInput = input => ({ target: { value } }) => {
+    if (input === "username") {
+      setUsername(value);
+    } else if (input === "password") {
+      setPassword(value);
+    }
+  };
+  const handleKeyDown = ({ key }) => {
+    if (key === "Enter") {
+      doAuth(true);
+    }
+  };
   return (
     <>
+      <Modal
+        className="modal"
+        title="Login"
+        isOpen={modal}
+        onRequestClose={closeModal}
+      >
+        <Input
+          label="Email"
+          onChange={handleInput("username")}
+          placeholder="abc@def.com"
+          type="text"
+        />
+        <Input
+          label="Password"
+          onChange={handleInput("password")}
+          onKeyDown={handleKeyDown}
+          placeholder="**********"
+          type="password"
+        />
+        <div className="login-container">
+          <Button
+            label="Login"
+            onClick={() => doAuth(true)}
+            className="login"
+            variant="brand"
+          />
+        </div>
+      </Modal>
       <Spinner show={loading} />
       <Notification status={notification} onClose={closeNotification} />
       <div className="flex-box">

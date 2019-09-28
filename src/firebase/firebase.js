@@ -1,4 +1,5 @@
 import _firebase from "firebase/app";
+import "firebase/firebase-auth";
 import "firebase/firestore";
 import "firebase/firebase-storage";
 import getDateKey from "../utils/getDateKey";
@@ -18,6 +19,10 @@ const firebase = _firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const storage = firebase.storage().ref();
+
+export const authenticate = (email, pass) => {
+  return firebase.auth().signInWithEmailAndPassword(email, pass);
+};
 
 export const getJournalData = date =>
   db
