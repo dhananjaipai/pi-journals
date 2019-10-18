@@ -35,12 +35,22 @@ function App() {
   const [auth, doAuth] = useState();
 
   useEffect(() => {
+    let stored = localStorage.getItem("auth");
+    if (stored) {
+      let { username, password } = JSON.parse(stored);
+      setUsername(username);
+      setPassword(password);
+      doAuth(true);
+    }
+  }, []);
+  useEffect(() => {
     if (auth) {
       (async () => {
         showModal(false);
         setLoading(true);
         try {
           await authenticate(username, password);
+          localStorage.setItem("auth", JSON.stringify({ username, password }));
           let data = await getJournalData(date);
           data = data ? data : {};
           setSelectedMood(data.mood);
@@ -55,6 +65,7 @@ function App() {
           setPlaceSRC(data.placePhotoUrl || "");
         } catch (error) {
           console.error(error);
+          localStorage.removeItem("auth");
           showNotification("load_error");
           setLoading(false);
         }
@@ -130,34 +141,36 @@ function App() {
   };
   return (
     <>
-      <Modal
-        className="modal"
-        title="Login"
-        isOpen={modal}
-        onRequestClose={closeModal}
-      >
-        <Input
-          label="Email"
-          onChange={handleInput("username")}
-          placeholder="abc@def.com"
-          type="text"
-        />
-        <Input
-          label="Password"
-          onChange={handleInput("password")}
-          onKeyDown={handleKeyDown}
-          placeholder="**********"
-          type="password"
-        />
-        <div className="login-container">
-          <Button
-            label="Login"
-            onClick={() => doAuth(true)}
-            className="login"
-            variant="brand"
+      {!auth && (
+        <Modal
+          className="modal"
+          title="Login"
+          isOpen={modal}
+          onRequestClose={closeModal}
+        >
+          <Input
+            label="Email"
+            onChange={handleInput("username")}
+            placeholder="abc@def.com"
+            type="text"
           />
-        </div>
-      </Modal>
+          <Input
+            label="Password"
+            onChange={handleInput("password")}
+            onKeyDown={handleKeyDown}
+            placeholder="**********"
+            type="password"
+          />
+          <div className="login-container">
+            <Button
+              label="Login"
+              onClick={() => doAuth(true)}
+              className="login"
+              variant="brand"
+            />
+          </div>
+        </Modal>
+      )}
       <Spinner show={loading} />
       <Notification status={notification} onClose={closeNotification} />
       <div className="flex-box">
