@@ -33,17 +33,17 @@ export const getJournalData = date =>
 
 export const saveJournalData = ({ date, ...body }) =>
   Promise.all([
-    body.dayPhotoUrl
+    body.dayPhotoUrl && body.dayPhotoUrl.includes("base64")
       ? storage
           .child(getDateKey(date) + "/day_photo.jpg")
           .putString(body.dayPhotoUrl, "data_url")
       : "",
-    body.nightPhotoUrl
+    body.nightPhotoUrl && body.nightPhotoUrl.includes("base64")
       ? storage
           .child(getDateKey(date) + "/night_photo.jpg")
           .putString(body.nightPhotoUrl, "data_url")
       : "",
-    body.placePhotoUrl
+    body.placePhotoUrl && body.placePhotoUrl.includes("base64")
       ? storage
           .child(getDateKey(date) + "/place_photo.jpg")
           .putString(body.placePhotoUrl, "data_url")
@@ -57,14 +57,13 @@ export const saveJournalData = ({ date, ...body }) =>
       )
     )
     .then(([dayPhotoUrl, nightPhotoUrl, placePhotoUrl]) => {
-      console.log(dayPhotoUrl, nightPhotoUrl, placePhotoUrl);
       return db
         .collection("pi-journals")
         .doc(getDateKey(date))
         .set({
           ...body,
-          dayPhotoUrl,
-          nightPhotoUrl,
-          placePhotoUrl
+          dayPhotoUrl: dayPhotoUrl || body.dayPhotoUrl,
+          nightPhotoUrl: nightPhotoUrl || body.nightPhotoUrl,
+          placePhotoUrl: placePhotoUrl || body.placePhotoUrl
         });
     });

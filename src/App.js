@@ -101,7 +101,7 @@ function App() {
       const file = _event.dataTransfer.files[0];
       previewFileImg(
         file,
-        setStateMapper(_event.currentTarget.getAttribute("id"))
+        setStateMapper[_event.currentTarget.getAttribute("id")]
       );
     };
     _dNdHandler({

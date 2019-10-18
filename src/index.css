@@ -64,6 +64,7 @@ html {
   display: flex;
   flex-direction: column;
   flex: 1;
+  padding-top: 10px;
 }
 
 .journal-container {
@@ -134,7 +135,6 @@ html {
 
 .photos-container .my-photo {
   width: 50%;
-  border-radius: 50%;
 }
 
 .photos-container .place-photo {
@@ -146,10 +146,6 @@ html {
   display: block;
   width: 100%;
   padding: 5px;
-}
-
-.my-photo img {
-  border-radius: 50%;
 }
 
 .default img {
