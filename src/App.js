@@ -99,7 +99,10 @@ function App() {
         placePhoto: setPlaceSRC
       };
       const file = _event.dataTransfer.files[0];
-      previewFileImg(file, setStateMapper(_event.currentTarget.id));
+      previewFileImg(
+        file,
+        setStateMapper(_event.currentTarget.getAttribute("id"))
+      );
     };
     _dNdHandler({
       highlightClass: "highlight",
