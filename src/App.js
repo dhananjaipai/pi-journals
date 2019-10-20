@@ -42,6 +42,7 @@ function App() {
       setPassword(password);
       doAuth(true);
     }
+    setInterval(() => save(), 30000);
   }, []);
   useEffect(() => {
     if (auth) {
@@ -94,6 +95,7 @@ function App() {
       .then(() => {
         setLoading(false);
         showNotification("success");
+        setTimeout(() => closeNotification(), 2000);
       })
       .catch(error => {
         setLoading(false);
