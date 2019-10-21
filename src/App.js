@@ -211,7 +211,7 @@ function App() {
           <Button variant="base" label="Save" onClick={save} />
         </div>
       </div>
-      <div className="flex-box">
+      <div className="flex-box ai-fs">
         <div className="boxes-container">
           <div className="box-container">
             <div className="title red-pill">Food</div>
