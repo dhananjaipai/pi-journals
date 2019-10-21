@@ -42,7 +42,6 @@ function App() {
       setPassword(password);
       doAuth(true);
     }
-    setInterval(() => save(), 30000);
   }, []);
   useEffect(() => {
     if (auth) {
